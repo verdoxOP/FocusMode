@@ -1,0 +1,39 @@
+﻿<Window x:Class="FocusModeLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Focus Mode Launcher" Height="400" Width="600">
+    <Grid>
+        <!-- Main Menu -->
+        <Menu x:Name="MainMenu" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <MenuItem Header="☰" />
+           
+        </Menu>
+
+        <!-- Timer Text -->
+        <TextBlock x:Name="TimerText" Text="00:00" FontSize="16" Margin="10"
+                   HorizontalAlignment="Right" VerticalAlignment="Top">
+            <TextBlock.Foreground>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="Red" Offset="0.0" />
+                    <GradientStop Color="Orange" Offset="0.2" />
+                    <GradientStop Color="Yellow" Offset="0.4" />
+                    <GradientStop Color="Green" Offset="0.6" />
+                    <GradientStop Color="Blue" Offset="0.8" />
+                    <GradientStop Color="Purple" Offset="1.0" />
+                </LinearGradientBrush>
+            </TextBlock.Foreground>
+        </TextBlock>
+
+        <!-- Centered Content -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="Focus Mode" FontSize="22" FontWeight="Bold" Margin="0,10" Foreground="White" />
+            <Button Content="Start Focus Session" Width="200" Margin="0,10" Click="StartFocus_Click" />
+            <Button Content="Stop Focus Session" Width="200" Click="StopFocus_Click" />
+        </StackPanel>
+    </Grid>
+
+    <!-- Background -->
+    <Window.Background>
+        <ImageBrush ImageSource="pack://application:,,,/Images/BG2.jpg" Stretch="UniformToFill" />
+    </Window.Background>
+</Window>

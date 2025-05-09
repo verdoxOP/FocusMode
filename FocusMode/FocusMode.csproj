@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+        <ApplicationIcon>Images\alpha.ico</ApplicationIcon>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="Images\BG2.jpg" />
+      <Resource Include="Images\BG2.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Images\AlpaBG.jpg" />
+      <Resource Include="Images\alpha.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Images\ElectroWolf.jpg" />
+      <Resource Include="Images\ElectroWolf.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Images\sepcllingBG.png" />
+      <Resource Include="Images\sepcalling.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Images\sepOGbg.jpg" />
+      <Resource Include="Images\sepOGbg.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Sounds\Alpha.mp3" />
+      <Resource Include="Sounds\Alpha.mp3" />
+      <None Remove="Sounds\ElectroWolf.mp3" />
+      <Resource Include="Sounds\ElectroWolf.mp3" />
+      <None Remove="Sounds\Roblo.mp3" />
+      <Resource Include="Sounds\Roblo.mp3" />
+      <None Remove="Sounds\SepOG.mp3" />
+      <Resource Include="Sounds\SepOG.mp3" />
+      <None Remove="Sounds\Surprise.mp3" />
+      <Resource Include="Sounds\Surprise.mp3" />
+      <None Remove="Sounds\sepcalling.mp3" />
+      <Resource Include="Sounds\sepcalling.mp3">
+        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Images\phonepickup.gif" />
+      <Resource Include="Images\phonepickup.gif">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Images\zierickBG.png" />
+      <Resource Include="Images\zierickBG.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Sounds\" />
+    </ItemGroup>
+    
+
+</Project>
