@@ -1,6 +1,5 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
+using FocusModeLauncher;
 
 namespace FocusMode;
 
@@ -9,4 +8,11 @@ namespace FocusMode;
 /// </summary>
 public partial class App : Application
 {
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        var focusManager = new FocusManager();
+        focusManager.OnStartup();
+    }
 }

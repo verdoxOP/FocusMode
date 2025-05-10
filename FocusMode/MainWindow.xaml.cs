@@ -65,12 +65,14 @@ namespace FocusModeLauncher
             PopulateThemesMenu();
             PopulateWhiteListMenu();
             PopulateBlackListMenu();
+          
+            
         }
 
         private void StartFocus_Click(object sender, RoutedEventArgs e)
         {
             focusManager.StartFocus();
-            remainingSeconds = 1500;
+            focusManager.StartFocusSession(1500);
             timer.Start();
         }
 
@@ -78,6 +80,7 @@ namespace FocusModeLauncher
         {
             timer.Stop();
             focusManager.StopFocus();
+            focusManager.EndFocusSession();
             TimerText.Text = "00:00";
         }
 
@@ -89,8 +92,9 @@ namespace FocusModeLauncher
             if (remainingSeconds <= 0)
             {
                 timer.Stop();
+                focusManager.EndFocusSession();
                 MessageBox.Show("Focus session complete!");
-                focusManager.StopFocus();
+               
             }
 
             if (!string.IsNullOrEmpty(selectedBlacklistConfig) &&
@@ -341,9 +345,58 @@ namespace FocusModeLauncher
                                                 ?? new Dictionary<string, List<string>>();
             }
         }
-        }
-    }
 
+        public class GamificationManager
+        {
+            public int DailyStreak { get; private set; }
+            public int HourlyReward { get; set; } = 10; // Points per hour
+            public int TotalPoints { get; private set; }
+            private DateTime lastUsedDate;
+
+            public void UpdateDailyStreak()
+            {
+                var today = DateTime.Today;
+                if (lastUsedDate.Date == today.AddDays(-1))
+                {
+                    DailyStreak++;
+                }
+                else if (lastUsedDate.Date != today)
+                {
+                    DailyStreak = 1; // Reset streak if not consecutive
+                }
+                lastUsedDate = today;
+            }
+
+            public void AddHourlyReward(int hours)
+            {
+                TotalPoints += hours * HourlyReward;
+            }
+
+            public void SaveProgress(string filePath)
+            {
+                var data = new
+                {
+                    DailyStreak,
+                    TotalPoints,
+                    LastUsedDate = lastUsedDate
+                };
+                File.WriteAllText(filePath, JsonConvert.SerializeObject(data, Formatting.Indented));
+            }
+
+            public void LoadProgress(string filePath)
+            {
+                if (File.Exists(filePath))
+                {
+                    var data = JsonConvert.DeserializeObject<dynamic>(File.ReadAllText(filePath));
+                    DailyStreak = (int)data.DailyStreak;
+                    TotalPoints = (int)data.TotalPoints;
+                    lastUsedDate = (DateTime)data.LastUsedDate;
+                }
+            }
+        }
+        }
+        }
+    
         
         
         

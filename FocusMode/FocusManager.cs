@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Windows;
 
 namespace FocusModeLauncher
 {
@@ -7,12 +8,12 @@ namespace FocusModeLauncher
         
         public void SetWhitelist(List<string> whitelist)
         {
-            this.whitelist = whitelist.ToArray(); // Update the active whitelist
+            this.whitelist = whitelist.ToArray(); 
 
-            // Logic to apply the whitelist
+            
             Debug.WriteLine("Whitelist applied: " + string.Join(", ", whitelist));
 
-            // Optionally, launch whitelisted apps immediately
+         
         
         }
 
@@ -115,6 +116,31 @@ namespace FocusModeLauncher
                 }
             }
         }
+        
+        
+        
+        private int remainingSeconds;
+        
+        public void StartFocusSession(int durationInSeconds)
+        {
+            remainingSeconds = durationInSeconds;
+            // Start a timer or logic to decrement remainingSeconds
+        }
+        
+        
+        private MainWindow.GamificationManager gamificationManager = new MainWindow.GamificationManager();
+        
+        
+
+        public void EndFocusSession()
+        {
+            int hoursFocused = remainingSeconds / 3600;
+            gamificationManager.AddHourlyReward(hoursFocused);
+            gamificationManager.UpdateDailyStreak();
+            gamificationManager.SaveProgress("gamification.json");
+
+            MessageBox.Show($"Focus session complete! You earned {hoursFocused * gamificationManager.HourlyReward} points. Total Points: {gamificationManager.TotalPoints}");
+        }
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -177,6 +203,30 @@ namespace FocusModeLauncher
         }
     }
 };
+        
+public void OnStartup()
+{
+    gamificationManager.LoadProgress("gamification.json");
+    UpdateStreakDisplay();
+    MessageBox.Show($"Welcome back! Current streak: {gamificationManager.DailyStreak} days. Total Points: {gamificationManager.TotalPoints}");
+}
+
+
+
+private void UpdateStreakDisplay()
+{
+    // Assuming you have access to a UI element like a TextBlock in your MainWindow
+    Application.Current.Dispatcher.Invoke(() =>
+    {
+        var mainWindow = Application.Current.MainWindow as MainWindow;
+        if (mainWindow != null)
+        {
+            mainWindow.StreakText.Text = $"🔥 {gamificationManager.DailyStreak}";
+        }
+    });
+}
+            
+            
             
 public void SetBlacklist(List<string> blacklist)
 {

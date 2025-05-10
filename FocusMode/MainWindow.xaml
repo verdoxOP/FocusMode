@@ -24,6 +24,13 @@
             </TextBlock.Foreground>
         </TextBlock>
         
+        <TextBlock x:Name="StreakText" 
+                   FontSize="16" 
+                   Foreground="Orange" 
+                   HorizontalAlignment="Center" 
+                   VerticalAlignment="Top" 
+                   Margin="10" />
+        
 
           
         <Button Content="Create Blacklist"  Height="20" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="CreateBlacklist_Click" />
