@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls; // For MenuItem and Menu
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Xml;
+using Newtonsoft.Json;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace FocusModeLauncher
 {
@@ -12,18 +17,41 @@ namespace FocusModeLauncher
     {
         private FocusManager focusManager;
         private DispatcherTimer timer;
-        private int remainingSeconds = 1500; // 25 minutes
-        private MediaPlayer mediaPlayer = new MediaPlayer(); // Class-level MediaPlayer instance
+        private int remainingSeconds = 1500;
+        private MediaPlayer mediaPlayer = new MediaPlayer();
 
-        private readonly Dictionary<string, (string ImagePath, Brush UiColor, string SoundPath)> themes = new Dictionary<string, (string, Brush, string)>
-        {
-            { "Roblo", ("pack://application:,,,/Images/BG2.jpg", Brushes.Red, "pack://application:,,,/Sounds/Roblo.mp3") },
-            { "Alpha", ("pack://application:,,,/Images/alpha.jpg", Brushes.Navy, "pack://application:,,,/Sounds/Alpha.mp3") },
-            { "SepCalling", ("pack://application:,,,/Images/sepcalling.png", Brushes.LightBlue, "pack://application:,,,/Sounds/SepCalling.mp3") },
-            { "ElectroWolf", ("pack://application:,,,/Images/ElectroWolf.jpg", Brushes.DarkBlue, "pack://application:,,,/Sounds/ElectroWolf.mp3") },
-            { "SepOG", ("pack://application:,,,/Images/sepOGbg.jpg", Brushes.Orange, "pack://application:,,,/Sounds/SepOG.mp3") },
-            { "Surprise", ("pack://application:,,,/Images/zierickBG.png", Brushes.Purple, "pack://application:,,,/Sounds/Surprise.mp3") }
-        };
+        private readonly Dictionary<string, (string ImagePath, Brush UiColor, string SoundPath)> themes =
+            new Dictionary<string, (string, Brush, string)>
+            {
+                {
+                    "Roblo",
+                    ("pack://application:,,,/Images/BG2.jpg", Brushes.Red, "pack://application:,,,/Sounds/Roblo.mp3")
+                },
+                {
+                    "Alpha",
+                    ("pack://application:,,,/Images/alpha.jpg", Brushes.Navy, "pack://application:,,,/Sounds/Alpha.mp3")
+                },
+                {
+                    "SepCalling",
+                    ("pack://application:,,,/Images/sepcalling.png", Brushes.LightBlue,
+                        "pack://application:,,,/Sounds/SepCalling.mp3")
+                },
+                {
+                    "ElectroWolf",
+                    ("pack://application:,,,/Images/ElectroWolf.jpg", Brushes.DarkBlue,
+                        "pack://application:,,,/Sounds/ElectroWolf.mp3")
+                },
+                {
+                    "SepOG",
+                    ("pack://application:,,,/Images/sepOGbg.jpg", Brushes.Orange,
+                        "pack://application:,,,/Sounds/SepOG.mp3")
+                },
+                {
+                    "Surprise",
+                    ("pack://application:,,,/Images/zierickBG.png", Brushes.Purple,
+                        "pack://application:,,,/Sounds/Surprise.mp3")
+                }
+            };
 
         public MainWindow()
         {
@@ -35,6 +63,8 @@ namespace FocusModeLauncher
             timer.Tick += Timer_Tick;
 
             PopulateThemesMenu();
+            PopulateWhiteListMenu();
+            PopulateBlackListMenu();
         }
 
         private void StartFocus_Click(object sender, RoutedEventArgs e)
@@ -62,6 +92,14 @@ namespace FocusModeLauncher
                 MessageBox.Show("Focus session complete!");
                 focusManager.StopFocus();
             }
+
+            if (!string.IsNullOrEmpty(selectedBlacklistConfig) &&
+                focusManager.BlacklistConfigs.TryGetValue(selectedBlacklistConfig, out var blacklist))
+            {
+                focusManager.SetBlacklist(blacklist);
+            }
+           
+
         }
 
         private void Themes_OnClick(object sender, RoutedEventArgs e)
@@ -90,24 +128,25 @@ namespace FocusModeLauncher
                     };
                     this.Background = backgroundBrush;
 
-                    // Apply the UI color to specific elements
+
                     ApplyColorToUIElements(this, uiColor);
 
-                    // Extract the sound file to a local path and play it
-                    string soundPath = theme.SoundPath; // e.g., "pack://application:,,,/Sounds/SepCalling.mp3"
+
+                    string soundPath = theme.SoundPath;
                     var uri = new Uri(soundPath, UriKind.RelativeOrAbsolute);
                     var streamResourceInfo = Application.GetResourceStream(uri);
 
                     if (streamResourceInfo != null)
                     {
-                        // Create a temporary file with the correct extension
-                        string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), System.IO.Path.GetFileName(soundPath));
+
+                        string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(),
+                            System.IO.Path.GetFileName(soundPath));
                         using (var fileStream = System.IO.File.Create(tempFile))
                         {
                             streamResourceInfo.Stream.CopyTo(fileStream);
                         }
 
-                        // Play the sound from the temporary file
+
                         mediaPlayer.Open(new Uri(tempFile, UriKind.Absolute));
                         mediaPlayer.Play();
                     }
@@ -151,7 +190,7 @@ namespace FocusModeLauncher
                     border.BorderBrush = color;
                 }
 
-                // Recursively apply to child elements
+
                 ApplyColorToUIElements(child, color);
             }
         }
@@ -177,5 +216,137 @@ namespace FocusModeLauncher
                 MessageBox.Show("MainMenu not found in the visual tree.");
             }
         }
+
+        private void PopulateWhiteListMenu()
+        {
+            var whiteListMenu = new MenuItem { Header = "Whitelists" };
+
+            foreach (var config in focusManager.WhitelistConfigs)
+            {
+                var configItem = new MenuItem { Header = config.Key };
+                configItem.Click += (sender, e) => SelectWhitelistConfig(config.Key);
+                whiteListMenu.Items.Add(configItem);
+            }
+
+            var menu = (Menu)LogicalTreeHelper.FindLogicalNode(this, "MainMenu");
+            if (menu != null)
+            {
+                menu.Items.Add(whiteListMenu);
+            }
+            else
+            {
+                MessageBox.Show("MainMenu not found in the visual tree.");
+            }
+        }
+
+
+
+        private string selectedWhitelistConfig;
+
+        private void SelectWhitelistConfig(string configName)
+        {
+            if (focusManager.WhitelistConfigs.TryGetValue(configName, out var whitelist))
+            {
+                selectedWhitelistConfig = configName;
+                focusManager.SetWhitelist(whitelist); // Apply the selected whitelist
+                MessageBox.Show($"Whitelist '{configName}' selected and applied.", "Whitelist Selection");
+            }
+            else
+            {
+                MessageBox.Show($"Whitelist configuration '{configName}' not found.");
+            }
+        }
+
+
+        private string selectedBlacklistConfig;
+
+        private void PopulateBlackListMenu()
+        {
+            var blackListMenu = new MenuItem { Header = "Blacklists" };
+
+            foreach (var config in focusManager.BlacklistConfigs)
+            {
+                var configItem = new MenuItem { Header = config.Key };
+                configItem.Click += (sender, e) => SelectBlacklistConfig(config.Key);
+                blackListMenu.Items.Add(configItem);
+            }
+
+            var menu = (Menu)LogicalTreeHelper.FindLogicalNode(this, "MainMenu");
+            if (menu != null)
+            {
+                menu.Items.Add(blackListMenu);
+            }
+            else
+            {
+                MessageBox.Show("MainMenu not found in the visual tree.");
+            }
+        }
+
+        private void SelectBlacklistConfig(string configName)
+        {
+            if (focusManager.BlacklistConfigs.ContainsKey(configName))
+            {
+                selectedBlacklistConfig = configName;
+                MessageBox.Show($"Blacklist '{configName}' selected.", "Blacklist Selection");
+            }
+            else
+            {
+                MessageBox.Show($"Blacklist configuration '{configName}' not found.");
+            }
+        }
+
+        private void CreateBlacklist_Click(object sender, RoutedEventArgs e)
+        {
+            var inputDialog = new InputDialog("Enter a name for the new blacklist:");
+            if (inputDialog.ShowDialog() == true)
+            {
+                string blacklistName = inputDialog.ResponseText;
+                if (!string.IsNullOrEmpty(blacklistName))
+                {
+                    var appInputDialog = new InputDialog("Enter applications to blacklist (comma-separated):");
+                    if (appInputDialog.ShowDialog() == true)
+                    {
+                        string apps = appInputDialog.ResponseText;
+                        var appList = apps.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (!focusManager.BlacklistConfigs.ContainsKey(blacklistName))
+                        {
+                            focusManager.BlacklistConfigs[blacklistName] = new List<string>(appList);
+                            MessageBox.Show($"Blacklist '{blacklistName}' created successfully.");
+
+                          
+                            PopulateBlackListMenu();
+                        }
+                        else
+                        {
+                            MessageBox.Show("A blacklist with this name already exists.");
+                        }
+                    }
+                }
+            }
+        }
+
+        public void SaveBlacklistsToFile(string filePath)
+        {
+            var json = JsonConvert.SerializeObject(focusManager.BlacklistConfigs, Formatting.Indented);
+            File.WriteAllText(filePath, json);
+        }
+
+        public void LoadBlacklistsFromFile(string filePath)
+        {
+            if (File.Exists(filePath))
+            {
+                var json = File.ReadAllText(filePath);
+                focusManager.BlacklistConfigs = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(json)
+                                                ?? new Dictionary<string, List<string>>();
+            }
+        }
+        }
     }
-}
+
+        
+        
+        
+    
+
+
